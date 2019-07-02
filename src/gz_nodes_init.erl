@@ -219,7 +219,8 @@ eg_rebar_app_config()->
         ,{db_sys, [{sys_cache, ram_copies}]}
         ,{db_location, [{share_location, ram_copies}]}
         ,{db_friends, [{friend_cache, ram_copies}]}
-      ]} ]
+        ,{db_friends, [{{friend_cache, []}, ram_copies}]}
+      ]}]
     }
   ].
 
@@ -232,21 +233,27 @@ node_create_copy_tables(Mod, ST, [A|Left])->
   ok = node_create_copy_tables(Mod, ST, Left).
 
 node_create_copy_table(Mod, ST, A) when is_atom(A), is_atom(ST)->
-  ok = Mod:create_table(A, ST),
+  ok = mod_create_table(Mod, A, ST),
   ok = gz_nodes_mnesia_helper:copy_table(A, ST);
 node_create_copy_table(Mod, disc_copies, {A, ST}) when is_atom(A)->
-  ok = Mod:create_table(A, ST),
+  ok = mod_create_table(Mod, A, ST),
   ok = gz_nodes_mnesia_helper:copy_table(A, ST);
 node_create_copy_table(Mod, ram_copies, {A, ST}) when is_atom(A)->
   case ST of
     ram_copies-> ok;
     _-> lager:warning("[node_create_copy_tables]only ram_copies: ~p, ~p, ~p~n", [Mod, A, ST])
   end,
-  ok = Mod:create_table(A, ram_copies),
+  ok = mod_create_table(Mod, A, ram_copies),
   ok = gz_nodes_mnesia_helper:copy_table(A, ram_copies);
 node_create_copy_table(Mod, ST, DB)->
   lager:info("[node_create_copy_tables]~p, ~p, ~p~n", [Mod, ST, DB]),
   ok.
+
+
+mod_create_table({Mod, Args}, A, ST)->
+  Mod:create_table(A, ST, Args);
+mod_create_table(Mod, A, ST)->
+  Mod:create_table(A, ST).
 
 
 %%%%%--------------------------------------------------------------------------------------------------
