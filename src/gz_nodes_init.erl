@@ -25,7 +25,6 @@ init()->
   MainNodes0 = gz_nodes_util:get_env(?APP_NAME, main_nodes, []),
   Opts = [{dbs, Dbs}],
 
-
   start(NodeType, MainNodes0, Opts).
 
 %%%-------------------------------------------------------------------

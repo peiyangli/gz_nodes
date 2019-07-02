@@ -3,6 +3,10 @@
   {vsn, "0.1.0"},
   {registered, []},
   {mod, { gz_nodes_app, []}},
+  {included_applictions,
+   [
+    gz_utils
+   ]},
   {applications,
    [kernel,
     stdlib
