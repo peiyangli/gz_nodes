@@ -10,7 +10,7 @@
 -author("pei").
 
 %% API
--export([get_env/2, difference/2, cross/2]).
+-export([get_env/2, get_env/3, difference/2, cross/2]).
 
 get_env(AppName, Key) ->
   get_env(AppName, Key, undefined).
