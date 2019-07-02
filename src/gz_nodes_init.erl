@@ -14,24 +14,6 @@
 
 -define(APP_NAME, gz_nodes).
 
-eg_rebar_app_config()->
-  [
-    { gz_nodes, [
-      {wait_time, 6000}
-      ,{node_type, disc_copies}
-      ,{main_nodes, ['chat_190116@192.168.133.55', 'chat_190116@192.168.133.56']}
-      ,{dbs, [
-        {db_sequence, [ {erlang_sequence, disc_copies} ]}
-        ,{db_user, [ {user_online, disc_copies}, {user_device_uid, disc_copies}, {user_wx_cache, ram_copies}, {user_cache, ram_copies} ]}
-        ,{db_token, [ {user_token, disc_copies}]}
-        ,{db_friends, [{friend_cache, ram_copies}]}
-        ,{db_server, [{server_instance, disc_copies}, {server_instance_info, disc_copies}]}
-        ,{db_sys, [{sys_cache, ram_copies}]}
-        ,{db_location, [{share_location, ram_copies}]}
-        ,{db_friends, [{friend_cache, ram_copies}]}
-      ]} ]
-    }
-  ].
 
 init()->
 %%  PgApp = proplists:get_value(pgapp, Opts, []),
@@ -222,26 +204,47 @@ wait_for_nodes(MinNodes, SliceTime, Iterations) ->
   end.
 %%%-------------------------------------------------------------------
 
+eg_rebar_app_config()->
+  [
+    { gz_nodes, [
+      {wait_time, 6000}
+      ,{node_type, disc_copies}
+      ,{main_nodes, ['chat_190116@192.168.133.55', 'chat_190116@192.168.133.56']}
+      ,{dbs, [
+        {db_sequence, [ {erlang_sequence, disc_copies} ]}
+        ,{db_user, [ {user_online, disc_copies}, {user_device_uid, disc_copies}, {user_wx_cache, ram_copies}, {user_cache, ram_copies} ]}
+        ,{db_token, [ {user_token, disc_copies}]}
+        ,{db_friends, [{friend_cache, ram_copies}]}
+        ,{db_server, [{server_instance, disc_copies}, {server_instance_info, disc_copies}]}
+        ,{db_sys, [{sys_cache, ram_copies}]}
+        ,{db_location, [{share_location, ram_copies}]}
+        ,{db_friends, [{friend_cache, ram_copies}]}
+      ]} ]
+    }
+  ].
 
+%%create_table(user_device_uid, ST)-> gz_nodes_mnesia_helper:create_table(user_device_uid, set, ST, record_info(fields, user_device_uid));
+
+
+node_create_copy_tables(_,_,[])->ok;
 node_create_copy_tables(Mod, ST, [A|Left])->
-  ok = node_create_copy_tables(Mod, ST, A),
-  ok = node_create_copy_tables(Mod, ST, Left);
-node_create_copy_tables(Mod, ST, A) when is_atom(A), is_atom(ST)->
+  ok = node_create_copy_table(Mod, ST, A),
+  ok = node_create_copy_tables(Mod, ST, Left).
+
+node_create_copy_table(Mod, ST, A) when is_atom(A), is_atom(ST)->
   ok = Mod:create_table(A, ST),
   ok = gz_nodes_mnesia_helper:copy_table(A, ST);
-node_create_copy_tables(Mod, disc_copies, {A, ST}) when is_atom(A)->
+node_create_copy_table(Mod, disc_copies, {A, ST}) when is_atom(A)->
   ok = Mod:create_table(A, ST),
   ok = gz_nodes_mnesia_helper:copy_table(A, ST);
-node_create_copy_tables(Mod, ram_copies, {A, ST}) when is_atom(A)->
+node_create_copy_table(Mod, ram_copies, {A, ST}) when is_atom(A)->
   case ST of
-    ram_copies->
-      ok;
-    _->
-      lager:warning("[node_create_copy_tables]only ram_copies: ~p, ~p, ~p~n", [Mod, A, ST])
+    ram_copies-> ok;
+    _-> lager:warning("[node_create_copy_tables]only ram_copies: ~p, ~p, ~p~n", [Mod, A, ST])
   end,
   ok = Mod:create_table(A, ram_copies),
   ok = gz_nodes_mnesia_helper:copy_table(A, ram_copies);
-node_create_copy_tables(Mod, ST, DB)->
+node_create_copy_table(Mod, ST, DB)->
   lager:info("[node_create_copy_tables]~p, ~p, ~p~n", [Mod, ST, DB]),
   ok.
 

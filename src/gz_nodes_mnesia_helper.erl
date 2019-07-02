@@ -10,10 +10,13 @@
 -author("pei").
 
 %% API
--export([create_table/4, copy_table/2]).
+-export([create_table/4, create_table/5, copy_table/2]).
 
 %%%%%--------------------------------------------------------------------------------------------------
 create_table(Name, Type, SType, Attr)->
+  create_table(Name, Type, SType, Attr, []).
+
+create_table(Name, Type, SType, Attr, MoreArgs)->
   Tables = mnesia:system_info(tables),
   case lists:member(Name, Tables) of
     true->
@@ -35,7 +38,7 @@ create_table(Name, Type, SType, Attr)->
            end,
       mnesia:wait_for_tables([Name], infinity);
     _ ->
-      {atomic, ok} = mnesia:create_table(Name, [{type, Type}, {SType, [node()]},{attributes, Attr}]),
+      {atomic, ok} = mnesia:create_table(Name, [{type, Type}, {SType, [node()]},{attributes, Attr} | MoreArgs]),
       ok
   end.
 
